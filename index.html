@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Weekly Ritual</title>
+    <style>
+      /* --- 1. FONTS --- */
+      @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600&display=swap");
+
+      :root {
+        --font-sf: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        --font-georgia: Georgia, "Times New Roman", serif;
+        --font-courier: "Courier New", Courier, monospace;
+        --font-mono: monospace;
+        --font-cursive: "Dancing Script", cursive;
+
+        --font-current: var(--font-sf);
+
+        --safe-top: env(safe-area-inset-top, 20px);
+        --safe-bottom: env(safe-area-inset-bottom, 20px);
+
+        --radius: 12px;
+        --ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+      }
+
+      /* --- 2. THEMES --- */
+      [data-theme="midnight"] {
+        --bg: #0a0a0c;
+        --text: #e0e0e0;
+        --dim: #666;
+        --card: rgba(28, 28, 30, 0.6);
+        --border: rgba(255, 255, 255, 0.08);
+        --accent: #ff4757;
+        --active-bg: #e0e0e0;
+        --active-text: #000;
+        --modal: #1c1c1e;
+      }
+      [data-theme="graphite"] {
+        --bg: #181818;
+        --text: #d0d0d0;
+        --dim: #555;
+        --card: #252525;
+        --border: #333;
+        --accent: #a0a0a0;
+        --active-bg: #666;
+        --active-text: #fff;
+        --modal: #2a2a2a;
+      }
+      [data-theme="paper"] {
+        --bg: #f2f2f7;
+        --text: #000;
+        --dim: #8e8e93;
+        --card: #fff;
+        --border: #d1d1d6;
+        --accent: #007aff;
+        --active-bg: #000;
+        --active-text: #fff;
+        --modal: #fff;
+      }
+      [data-theme="ocean"] {
+        --bg: #001219;
+        --text: #e0fbfc;
+        --dim: #5c7c8a;
+        --card: rgba(10, 36, 48, 0.7);
+        --border: rgba(61, 90, 128, 0.3);
+        --accent: #3d5a80;
+        --active-bg: #98c1d9;
+        --active-text: #000;
+        --modal: #0f2d3a;
+      }
+      [data-theme="sunset"] {
+        --bg: #2d1b2e;
+        --text: #fec5bb;
+        --dim: #a47e8c;
+        --card: rgba(80, 40, 60, 0.5);
+        --border: rgba(200, 100, 100, 0.2);
+        --accent: #e07a5f;
+        --active-bg: #e07a5f;
+        --active-text: #fff;
+        --modal: #3d243e;
+      }
+      [data-theme="dusk"] {
+        --bg: #1e1e24;
+        --text: #e2e2df;
+        --dim: #808080;
+        --card: rgba(45, 45, 55, 0.7);
+        --border: rgba(255, 255, 255, 0.05);
+        --accent: #d4a373;
+        --active-bg: #d4a373;
+        --active-text: #1e1e24;
+        --modal: #25252b;
+      }
+      [data-theme="coffee"] {
+        --bg: #231b15;
+        --text: #d6ccc2;
+        --dim: #8a8075;
+        --card: rgba(50, 40, 30, 0.6);
+        --border: #4a403a;
+        --accent: #c0966f;
+        --active-bg: #d5bdaf;
+        --active-text: #231b15;
+        --modal: #2e241e;
+      }
+
+      /* --- 3. LAYOUT --- */
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-current);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background 0.3s, color 0.3s;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+
+      /* TOP SECTION (Fixed) */
+      #topSection {
+        flex: 0 0 auto;
+        padding: calc(var(--safe-top) + 15px) 20px 0 20px;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* Progress Line */
+      #progressBar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: var(--accent);
+        width: 0%;
+        transition: width 0.5s var(--ease);
+        z-index: 100;
+        box-shadow: 0 0 10px var(--accent);
+      }
+
+      /* Motive */
+      #motiveDisplay {
+        font-family: var(--font-cursive);
+        font-size: 3.5rem;
+        color: var(--text);
+        line-height: 1.1;
+        margin-bottom: 15px;
+        text-align: center;
+        display: none;
+        animation: fadeIn 0.8s ease-out;
+        text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        text-transform: lowercase;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+      }
+      .icon-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+      }
+
+      /* Days */
+      .days {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        padding-bottom: 15px;
+      }
+      .day {
+        flex: 1;
+        height: 42px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        color: var(--dim);
+        border: 1px solid transparent;
+      }
+      .day.active {
+        background: var(--active-bg);
+        color: var(--active-text);
+        font-weight: 700;
+      }
+      .day-label {
+        font-size: 14px;
+        text-transform: lowercase;
+      }
+
+      /* BOTTOM SECTION (Scrollable) */
+      #scrollContainer {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 20px calc(var(--safe-bottom) + 80px) 20px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .empty-state {
+        text-align: center;
+        color: var(--dim);
+        font-size: 14px;
+        margin-top: 40px;
+        opacity: 0.5;
+        letter-spacing: 1px;
+      }
+
+      /* Slot */
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(15px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .slot {
+        background: var(--card);
+        border: 1px solid var(--border);
+        padding: 18px 20px;
+        border-radius: var(--radius);
+        position: relative;
+        touch-action: pan-y;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        animation: slideIn 0.4s var(--ease) forwards;
+        user-select: none;
+        transition: transform 0.1s;
+      }
+      .slot:active {
+        transform: scale(0.98);
+      }
+      .slot.done {
+        opacity: 0.4;
+      }
+      .slot.done .slot-title {
+        text-decoration: line-through;
+      }
+
+      .slot.timed {
+        border-left: 1px solid var(--border);
+      }
+
+      .slot-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .slot-title {
+        font-size: 17px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        line-height: 1.3;
+        flex: 1;
+      }
+      .slot-meta {
+        font-size: 13px;
+        color: var(--dim);
+        font-family: var(--font-mono);
+        opacity: 0.8;
+        margin-top: 4px;
+      }
+
+      /* Common Modal Styles */
+      dialog {
+        border: none;
+        background: transparent;
+        padding: 0;
+        width: 100%;
+        max-width: 360px;
+        margin: auto;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+      }
+      .modal-card {
+        background: var(--modal);
+        color: var(--text);
+        padding: 24px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        animation: slideUp 0.3s var(--ease);
+      }
+      .panel-row {
+        margin-bottom: 18px;
+      }
+      .panel-label {
+        display: block;
+        font-size: 11px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+      input[type="text"],
+      input[type="time"],
+      select {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 12px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      /* Info Box */
+      .info-box {
+        background: rgba(127, 127, 127, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 12px;
+        color: var(--dim);
+        line-height: 1.5;
+      }
+      .info-box ul {
+        margin: 5px 0 0 15px;
+        padding: 0;
+      }
+      .info-box li {
+        margin-bottom: 4px;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      .btn {
+        flex: 1;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-save {
+        background: var(--accent);
+        color: var(--bg);
+      }
+      .btn-cancel {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .btn-del {
+        color: #ff3b30;
+        background: rgba(255, 59, 48, 0.1);
+        display: none;
+      }
+      .btn-del.show {
+        display: block;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="midnight">
+    <div id="progressBar"></div>
+
+    <div id="topSection">
+      <div id="motiveDisplay"></div>
+      <div class="header">
+        <h1 id="dateTitle">ritual</h1>
+        <div class="actions">
+          <div class="icon-btn" id="btnSettings">⚙</div>
+          <div class="icon-btn" id="btnAdd">+</div>
+        </div>
+      </div>
+
+      <div class="days" id="daysRow"></div>
+    </div>
+
+    <div id="scrollContainer">
+      <div id="list"></div>
+    </div>
+
+    <dialog id="editModal">
+      <div class="modal-card">
+        <div
+          style="font-size: 18px; font-weight: 700; margin-bottom: 15px"
+          id="modalTitle"
+        >
+          Task
+        </div>
+
+        <div class="info-box" id="modalInfo"></div>
+
+        <div class="panel-row">
+          <span class="panel-label">Title</span>
+          <input
+            type="text"
+            id="editTitle"
+            placeholder="e.g. Read 10 pages"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="panel-row">
+          <span class="panel-label">Time (Optional)</span>
+          <div style="display: flex; gap: 10px">
+            <input type="time" id="editStart" />
+            <input type="time" id="editEnd" />
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-del" id="btnDelete">Delete</button>
+          <button class="btn btn-cancel" id="btnCancelTask">Cancel</button>
+          <button class="btn btn-save" id="btnSave">Save</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="settingsModal">
+      <div class="modal-card">
+        <div style="font-size: 18px; font-weight: 700; margin-bottom: 15px">
+          Settings
+        </div>
+
+        <div class="panel-row">
+          <span class="panel-label">Motive</span>
+          <input
+            type="text"
+            id="inpMotive"
+            placeholder="e.g. Memento Mori"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="panel-row">
+          <span class="panel-label">Theme</span>
+          <select id="selTheme">
+            <option value="midnight">Midnight (Dark)</option>
+            <option value="graphite">Graphite (Grey)</option>
+            <option value="ocean">Ocean (Blue)</option>
+            <option value="sunset">Sunset (Original)</option>
+            <option value="dusk">Dusk (Purple/Gold)</option>
+            <option value="coffee">Coffee (Brown)</option>
+            <option value="paper">Paper (Light)</option>
+          </select>
+        </div>
+
+        <div class="panel-row">
+          <span class="panel-label">Typography</span>
+          <select id="selFont">
+            <option value="sf">SF Pro / System</option>
+            <option value="cursive">Cursive (Script)</option>
+            <option value="georgia">Georgia (Serif)</option>
+            <option value="courier">Courier New</option>
+            <option value="mono">Monospace</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-cancel" id="btnCloseSettings">Close</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      // --- CONFIG ---
+      const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      const FONTS = {
+        sf: "var(--font-sf)",
+        cursive: "var(--font-cursive)",
+        georgia: "var(--font-georgia)",
+        courier: "var(--font-courier)",
+        mono: "var(--font-mono)",
+      };
+
+      // --- STATE ---
+      let state = JSON.parse(localStorage.getItem("ritual_v6")) || {
+        tasks: { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] },
+        settings: { theme: "midnight", font: "sf", motive: "" },
+        lastVisit: Date.now(),
+      };
+
+      let currentDay = (new Date().getDay() + 6) % 7;
+      let editing = null;
+
+      // --- INIT ---
+      function init() {
+        applySettings();
+        cleanup();
+        rollover();
+        render();
+        state.lastVisit = Date.now();
+        save();
+      }
+
+      function save() {
+        localStorage.setItem("ritual_v6", JSON.stringify(state));
+      }
+
+      function vibrate() {
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+
+      // --- HELPERS ---
+      function formatTime(timeStr) {
+        if (!timeStr) return "";
+        const [h, m] = timeStr.split(":");
+        let hour = parseInt(h);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
+        return `${hour}:${m} ${ampm}`;
+      }
+
+      // --- LOGIC ---
+      function cleanup() {
+        const cutoff = Date.now() - 6 * 86400000;
+        for (let d = 0; d < 7; d++) {
+          state.tasks[d] = state.tasks[d].filter(
+            (t) => !(t.done && t.doneTime && t.doneTime < cutoff)
+          );
+        }
+      }
+
+      function rollover() {
+        const last = new Date(state.lastVisit);
+        const now = new Date();
+        if (last.getDate() !== now.getDate()) {
+          for (let d = 0; d < 7; d++) {
+            if (d === currentDay) continue;
+            const keep = [];
+            state.tasks[d].forEach((t) => {
+              if (!t.start && !t.done) state.tasks[currentDay].push(t);
+              else keep.push(t);
+            });
+            state.tasks[d] = keep;
+          }
+        }
+      }
+
+      // --- RENDER ---
+      function applySettings() {
+        const s = state.settings;
+        document.body.dataset.theme = s.theme;
+        document.body.style.setProperty("--font-current", FONTS[s.font]);
+
+        const mDiv = document.getElementById("motiveDisplay");
+        if (s.motive && s.motive.trim() !== "") {
+          mDiv.innerText = s.motive;
+          mDiv.style.display = "block";
+        } else {
+          mDiv.style.display = "none";
+        }
+
+        document.getElementById("selTheme").value = s.theme;
+        document.getElementById("selFont").value = s.font;
+        document.getElementById("inpMotive").value = s.motive;
+      }
+
+      function render() {
+        // 1. Interchange Date-Day to Day-Date
+        const now = new Date();
+        const dateStr = now
+          .toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "short",
+            day: "numeric",
+          })
+          .toLowerCase();
+        document.getElementById("dateTitle").innerText = dateStr;
+
+        const tasks = state.tasks[currentDay];
+        const total = tasks.length;
+        const done = tasks.filter((t) => t.done).length;
+        document.getElementById("progressBar").style.width =
+          total === 0 ? "0%" : `${(done / total) * 100}%`;
+
+        const daysRow = document.getElementById("daysRow");
+        daysRow.innerHTML = "";
+        DAYS.forEach((name, i) => {
+          const el = document.createElement("div");
+          el.className = `day ${i === currentDay ? "active" : ""}`;
+          el.innerHTML = `<span class="day-label">${name}</span>`;
+          el.onclick = () => {
+            vibrate();
+            currentDay = i;
+            render();
+          };
+          daysRow.appendChild(el);
+        });
+
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        if (tasks.length === 0) {
+          list.innerHTML = `<div class="empty-state">REST</div>`;
+          return;
+        }
+
+        const mapped = tasks.map((t, i) => ({ ...t, _idx: i }));
+        const timed = mapped
+          .filter((t) => t.start)
+          .sort((a, b) => a.start.localeCompare(b.start));
+        const untimed = mapped.filter((t) => !t.start);
+
+        [...timed, ...untimed].forEach((task, index) => {
+          const el = document.createElement("div");
+          el.className = `slot ${task.start ? "timed" : ""} ${
+            task.done ? "done" : ""
+          }`;
+          el.style.animationDelay = `${index * 0.05}s`;
+
+          let meta = "";
+          if (task.start)
+            meta = `${formatTime(task.start)} ${
+              task.end ? "- " + formatTime(task.end) : ""
+            }`;
+
+          // 2. Remove Pencil Icon (removed .slot-edit-btn)
+          el.innerHTML = `
+            <div class="slot-header">
+                <div class="slot-title">${task.title}</div>
+            </div>
+            ${meta ? `<div class="slot-meta">${meta}</div>` : ""}
+          `;
+
+          // --- LONG PRESS LOGIC ---
+          let pressTimer;
+          let isLongPress = false;
+
+          const startPress = () => {
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+              isLongPress = true;
+              vibrate();
+              openTaskModal(null, task._idx); // Trigger Edit
+              // Add a dataset flag to prevent the click event from toggling done immediately
+              el.dataset.longPressed = "true";
+            }, 600); // 600ms hold time
+          };
+
+          const cancelPress = () => {
+            clearTimeout(pressTimer);
+          };
+
+          // Mouse/Touch Events
+          el.addEventListener("touchstart", startPress, { passive: true });
+          el.addEventListener("touchend", cancelPress);
+          el.addEventListener("touchmove", cancelPress);
+          el.addEventListener("mousedown", startPress);
+          el.addEventListener("mouseup", cancelPress);
+          el.addEventListener("mouseleave", cancelPress);
+
+          // Click to complete (only if not long pressed)
+          el.onclick = (e) => {
+            if (el.dataset.longPressed === "true") {
+              el.dataset.longPressed = "false";
+              return;
+            }
+            // If timed, don't toggle done (it's an event)
+            if (task.start) return;
+
+            vibrate();
+            const real = state.tasks[currentDay][task._idx];
+            real.done = !real.done;
+            real.doneTime = real.done ? Date.now() : null;
+            save();
+            render();
+          };
+
+          list.appendChild(el);
+        });
+      }
+
+      // --- MODALS ---
+      const editModal = document.getElementById("editModal");
+      const settingsModal = document.getElementById("settingsModal");
+      const info = document.getElementById("modalInfo");
+
+      // Open Task Modal (Add or Edit)
+      window.openTaskModal = function (e, idx) {
+        if (e) e.stopPropagation();
+        const isEdit = idx !== null && idx !== undefined;
+        editing = isEdit ? { idx: idx } : null;
+        const t = isEdit ? state.tasks[currentDay][idx] : {};
+
+        document.getElementById("modalTitle").innerText = isEdit
+          ? "Edit Task"
+          : "New Task";
+        document.getElementById("editTitle").value = t.title || "";
+        document.getElementById("editStart").value = t.start || "";
+        document.getElementById("editEnd").value = t.end || "";
+
+        updateInfoBox();
+        document.getElementById("btnDelete").classList.toggle("show", isEdit);
+        editModal.showModal();
+      };
+
+      function updateInfoBox() {
+        const hasTime = document.getElementById("editStart").value !== "";
+        info.innerHTML = `<strong>Timed Task Rules:</strong>
+            <ul>
+            <li>Repeats every week on this specific day.</li>
+            <li>Sorted automatically by time.</li>
+            </ul>
+            <strong>Untimed Task Rules:</strong>
+            <ul>
+            <li>Does not repeat automatically.</li>
+            <li>If not done by today, moves to tomorrow.</li>
+            <li>Tap card body to complete.</li>
+            </ul>
+            <p>Long press to edit.</p>`;
+      }
+
+      // Event Listeners
+      document.getElementById("editStart").onchange = updateInfoBox;
+
+      document.getElementById("btnSave").onclick = () => {
+        const title = document.getElementById("editTitle").value.trim();
+        if (!title) return;
+        const start = document.getElementById("editStart").value;
+        const end = document.getElementById("editEnd").value;
+
+        const newTask = { title, start, end, done: false, doneTime: null };
+
+        if (editing) {
+          const old = state.tasks[currentDay][editing.idx];
+          if (!start && !old.start) {
+            newTask.done = old.done;
+            newTask.doneTime = old.doneTime;
+          }
+          state.tasks[currentDay][editing.idx] = newTask;
+        } else {
+          state.tasks[currentDay].push(newTask);
+        }
+        save();
+        render();
+        editModal.close();
+      };
+
+      document.getElementById("btnDelete").onclick = () => {
+        if (editing) {
+          state.tasks[currentDay].splice(editing.idx, 1);
+          save();
+          render();
+          editModal.close();
+        }
+      };
+
+      document.getElementById("btnCancelTask").onclick = () =>
+        editModal.close();
+      document.getElementById("btnAdd").onclick = () =>
+        openTaskModal(null, null);
+
+      // Settings Modal Logic
+      document.getElementById("btnSettings").onclick = () =>
+        settingsModal.showModal();
+      document.getElementById("btnCloseSettings").onclick = () =>
+        settingsModal.close();
+
+      document.getElementById("selTheme").onchange = (e) => {
+        state.settings.theme = e.target.value;
+        applySettings();
+        save();
+      };
+      document.getElementById("selFont").onchange = (e) => {
+        state.settings.font = e.target.value;
+        applySettings();
+        save();
+      };
+      document.getElementById("inpMotive").oninput = (e) => {
+        state.settings.motive = e.target.value;
+        applySettings();
+        save();
+      };
+
+      init();
+    </script>
+  </body>
+</html>
